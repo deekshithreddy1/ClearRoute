@@ -1,0 +1,73 @@
+{
+  "mode": "demo",
+  "environment": "Local demo",
+  "now": "2026-09-01T00:00:00.000Z",
+  "session": {
+    "role": "customer",
+    "tenantId": "atlas"
+  },
+  "tenants": [
+    {
+      "id": "atlas",
+      "name": "Atlas Labs",
+      "partyId": "atlas::demo-party",
+      "status": "needs_setup",
+      "limitUsd": "25.00",
+      "unbilledUsd": "0.00",
+      "outstandingUsd": "0.00",
+      "allowanceBytes": 6250000,
+      "usedBytes": 0
+    }
+  ],
+  "treasury": null,
+  "quote": {
+    "id": "fixture-v1-1788220800000",
+    "usdPerCc": "0.20",
+    "observedAt": "2026-09-01T00:00:00.000Z",
+    "expiresAt": "2026-09-01T00:05:00.000Z",
+    "source": "Fixture — not live"
+  },
+  "usage": [],
+  "topups": [],
+  "invoices": [],
+  "requests": [],
+  "events": [],
+  "policy": {
+    "label": "Fixture tariff v1 — not a live commercial offer",
+    "topupTerms": "Demo top-ups use test credit; real payment terms pending.",
+    "billing": "Consecutive 15-day UTC periods; due on issue in this demo only.",
+    "rate": "0.00002 CC equivalent per simulated traffic byte, valued at $0.20/CC. Zero service fee in fixture only."
+  },
+  "readiness": [
+    {
+      "name": "Application & billing",
+      "status": "ready",
+      "detail": "Local SQLite records with idempotency and account isolation."
+    },
+    {
+      "name": "Canton network",
+      "status": "partial",
+      "detail": "Open LocalNet for checked ledger connectivity and actual sample completions. Funding and metering remain simulated."
+    },
+    {
+      "name": "Hosting partner",
+      "status": "pending",
+      "detail": "Operator and scoped API access required."
+    },
+    {
+      "name": "Live pricing",
+      "status": "pending",
+      "detail": "Quote source and pricing policy require selection."
+    },
+    {
+      "name": "USD / USDC settlement",
+      "status": "pending",
+      "detail": "Rail, token/network, and payment terms not configured."
+    },
+    {
+      "name": "MainNet",
+      "status": "disabled",
+      "detail": "No real spending or payment collection enabled."
+    }
+  ]
+}
