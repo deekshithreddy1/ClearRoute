@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import { writeFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
+import { ledger } from '../dist-server/localnet-client.js';
+import { trafficReceipt } from '../dist-server/traffic.js';
+const headers={'x-demo-session':'operator','Content-Type':'application/json'};
+const response=await fetch('http://127.0.0.1:3001/api/traffic',{headers});assert.equal(response.status,200);
+const state=await response.json();const purchase=state.purchases.find(p=>p.status==='completed');
+assert.ok(purchase,'No confirmed traffic purchase');assert.equal(purchase.bytes,200000);
+const db=new DatabaseSync('data/traffic.sqlite',{readOnly:true});
+const row=db.prepare('SELECT requestKey FROM purchases WHERE id=?').get(purchase.id);db.close();
+const replay=await fetch('http://127.0.0.1:3001/api/traffic',{method:'POST',headers:{...headers,'idempotency-key':row.requestKey},body:JSON.stringify({bytes:purchase.bytes})});
+assert.equal(replay.status,200);assert.equal((await replay.json()).result.id,purchase.id);
+const tx=await ledger('app-provider','/v2/updates/transaction-by-id',{updateId:purchase.response.transaction_id,transactionFormat:{transactionShape:'TRANSACTION_SHAPE_LEDGER_EFFECTS',eventFormat:{filtersByParty:{[purchase.target.party]:{}},verbose:true}}});
+assert.equal(tx.transaction.updateId,purchase.response.transaction_id);
+writeFileSync('evidence/traffic-verified.json',JSON.stringify({verifiedAt:new Date().toISOString(),purchase,ledgerEffects:tx},null,2)+'\n');
+console.log('PASS: confirmed native purchase, same-key replay, transaction independently read from Canton.');
+console.log(JSON.stringify(trafficReceipt(tx,purchase.request),null,2));
