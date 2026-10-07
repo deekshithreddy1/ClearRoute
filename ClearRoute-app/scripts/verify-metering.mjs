@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {writeFileSync} from 'node:fs';
-import {ledger} from '../dist-server/localnet-client.js';
+import {ledger} from '../dist-backend/localnet-client.js';
 const base='http://127.0.0.1:3001/api/metering';
 async function request(role='operator',route='',body){const r=await fetch(base+route,{method:body?'POST':'GET',headers:{'x-demo-session':role,'content-type':'application/json'},body:body?JSON.stringify(body):undefined});assert.equal(r.status,200);return r.json();}
 await request('operator','/sync',{});

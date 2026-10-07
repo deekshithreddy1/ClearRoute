@@ -1,18 +1,26 @@
 {
-  "name": "launchfuel",
+  "name": "clearroute",
   "private": true,
+  "overrides": {
+    "shell-quote": "1.11.0"
+  },
   "version": "0.1.0",
   "type": "module",
   "engines": {
     "node": ">=22.14.0"
   },
   "scripts": {
-    "localnet:setup": "node dist-server/setup-localnet.js",
-    "dev": "concurrently -k -n api,web \"tsx watch server/index.ts\" \"vite\"",
+    "localnet:setup": "node dist-backend/setup-localnet.js",
+    "wallet:setup": "node dist-backend/setup-wallets.js",
+    "wallet:e2e": "node scripts/verify-wallet-funding.mjs",
+    "gas:e2e": "node scripts/verify-gas-station.mjs",
+    "dev": "concurrently -k -n api,web \"tsx watch backend/index.ts\" \"vite\"",
     "build": "node scripts/build.mjs",
-    "start": "node dist-server/index.js",
+    "start": "node dist-backend/index.js",
+    "auth:admin": "node dist-backend/auth-admin.js",
+    "hackathon:e2e": "node scripts/hackathon-e2e.mjs",
     "test": "npm run test:backend && npm run test:frontend",
-    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "typecheck": "tsc -p tsconfig.backend.json --noEmit && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "test:backend": "node scripts/test-backend.mjs",
     "test:frontend": "vitest run",
     "verify": "npm run typecheck && npm test && npm run build"

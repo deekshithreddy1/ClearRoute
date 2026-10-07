@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { ledger } from '../dist-server/localnet-client.js';
-import { trafficReceipt } from '../dist-server/traffic.js';
+import { ledger } from '../dist-backend/localnet-client.js';
+import { trafficReceipt } from '../dist-backend/traffic.js';
 const headers={'x-demo-session':'operator','Content-Type':'application/json'};
 const response=await fetch('http://127.0.0.1:3001/api/traffic',{headers});assert.equal(response.status,200);
 const state=await response.json();const purchase=state.purchases.find(p=>p.status==='completed');

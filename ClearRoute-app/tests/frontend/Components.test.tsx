@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { test, expect, vi } from 'vitest';
-import Traffic from '../../src/Traffic';
-import Metering from '../../src/Metering';
-import Localnet from '../../src/Localnet';
+import Traffic from '../../frontend/Traffic';
+import Metering from '../../frontend/Metering';
+import Localnet from '../../frontend/Localnet';
 
 const traffic = { target: { party: 'provider', domain: 'domain', minBytes: 200000, balanceCc: '10', checkedAt: '2026-09-01T00:00:00Z' }, maxBytes: 1000000, remainingLimitBytes: 1000000, purchases: [], error: null };
 test('traffic capacity is operator-only and customer view makes no requests', () => {

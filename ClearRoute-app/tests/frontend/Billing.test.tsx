@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { test, expect, vi } from 'vitest';
-import Billing from '../../src/Billing';
+import Billing from '../../frontend/Billing';
 
 const invoice = { id: 'invoice-1', tenant: 'atlas', totalUsd: '1.00', outstandingUsd: '1.00', status: 'issued', periodStart: '2026-09-01T00:00:00Z', periodEnd: '2026-09-16T00:00:00Z', payments: [] as { id: string; reference: string; amountUsd: string; status: string }[] };
 const preview = { id: 'preview-1', tenant: 'nova', totalUsd: '2.00', periodStart: '2026-09-01T00:00:00Z', periodEnd: '2026-09-16T00:00:00Z' };

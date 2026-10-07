@@ -1,0 +1,49 @@
+services:
+  app:
+    build:
+      context: ..
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 45s
+    env_file: app.env
+    environment:
+      CLEARROUTE_BIND_HOST: 0.0.0.0
+      CLEARROUTE_DATA_DIR: /app/data
+      CLEARROUTE_NETWORKS_FILE: /config/networks.json
+    volumes:
+      - clearroute_data:/app/data
+      - ../config/networks.json:/config/networks.json:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    env_file: app.env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  clearroute_data:
+  caddy_data:
+  caddy_config:

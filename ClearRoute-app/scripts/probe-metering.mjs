@@ -1,5 +1,5 @@
 import {readFileSync} from 'node:fs';
-import {ledger} from '../dist-server/localnet-client.js';
+import {ledger} from '../dist-backend/localnet-client.js';
 const config=JSON.parse(readFileSync('data/localnet.json','utf8'));
 const saved=JSON.parse(readFileSync('evidence/localnet-atlas.json','utf8'));
 for(const step of saved.result.steps){

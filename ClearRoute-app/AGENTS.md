@@ -24,3 +24,10 @@ not establish production readiness or compatibility with future Canton versions.
 Keep tests and the dependency lockfile in the change. Do not claim live payment
 settlement, production authentication, or deployment readiness while those
 capabilities remain unimplemented.
+
+Develop in a sprint branch created from `dev`; the user reviews and commits, then
+merges the sprint into `dev` and promotes `dev` to `main`. Do not commit, push or
+merge unless explicitly requested. Scope application changes to this repository's
+ClearRoute-app folder. Document each sprint and its acceptance criteria in
+SPRINTS.md. Run offline tests first. Browser checks and live LocalNet operations
+are separate user-controlled steps; do not run them implicitly.

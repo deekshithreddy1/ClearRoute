@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { ledger } from '../dist-server/localnet-client.js';
+import { ledger } from '../dist-backend/localnet-client.js';
 const headers={'x-demo-session':'atlas','Content-Type':'application/json','idempotency-key':'integration-atlas-001'};
 async function api(route,body) {
   const response=await fetch('http://127.0.0.1:3001'+route,{headers,method:body?'POST':'GET',body:body?JSON.stringify(body):undefined});

@@ -1,0 +1,118 @@
+# ClearRoute: local development and cloud deployment
+
+## The two repositories
+
+Use **ClearRoute/ClearRoute-app** for the web application. Its **frontend/**
+contains React files; **backend/** contains the Node API, authentication,
+ledger adapters and database logic. One Node server serves the built frontend
+and API. You do not need two cloud services.
+
+Use **ClearRoute-DAML/** for contracts. **daml/ClearRoute/** contains production
+modules; **tests/daml/ClearRoute/** contains tests; **release/** contains the
+tested DAR, package ID and checksum. Only this repository goes to
+https://github.com/deekshithreddy1/ClearRoute-DAML.
+
+The containing Quickstart workspace and its older app copy are not deployment
+inputs. The canonical app remote is https://github.com/deekshithreddy1/ClearRoute.
+
+## Local browser preview, no Canton connection required
+
+Install Node 22.14 or newer in the Node 22 line. From ClearRoute/ClearRoute-app:
+
+```powershell
+npm ci
+npm run verify
+npm run auth:admin -- create --id admin --name Administrator --role operator
+npm run auth:admin -- issue --id admin --days 7
+npm start
+```
+
+Open http://127.0.0.1:3001 and sign in with the issued application access key.
+For hot reload, use `npm run dev` and http://127.0.0.1:5173 instead.
+Offline mode is the default; it displays the real application with unconfigured
+networks. Application access keys are not ledger JWTs.
+
+## Cloud: use one persistent VM for the hackathon
+
+Recommended shape: one Ubuntu VM with at least 2 vCPU / 4 GB RAM as a starting
+point for building and running this app, a persistent disk and a domain.
+Choose AWS Lightsail/EC2 or GCP Compute Engine. This is a starting sizing
+assumption, not a load-tested capacity guarantee.
+
+SQLite needs a persistent filesystem and one application writer. Do not place
+this version on ephemeral serverless storage or scale it across replicas.
+
+1. Create the VM, attach/reserve a stable public IP and point your domain's A
+   record to it. Open TCP 80/443; restrict SSH to your administrator IP.
+2. Install Docker Engine and the Compose plugin using the official instructions
+   for your Ubuntu version. Clone the app repository and select main:
+
+   ```sh
+   git clone https://github.com/deekshithreddy1/ClearRoute.git
+   cd ClearRoute/ClearRoute-app
+   cp config/networks.example.json config/networks.json
+   cp deploy/app.env.example deploy/app.env
+   chmod 600 deploy/app.env config/networks.json
+   ```
+
+3. Edit both copies. Set your real domain, exact HTTPS origin, NODERS party/user
+   bindings and synchronizer. Keep writesEnabled false until the connection
+   and permission checks are complete. Supply tokens in the private env file.
+   Never commit either populated file or paste tokens into chat.
+4. Start:
+
+   ```sh
+   docker compose -f deploy/compose.yaml up -d --build
+   docker compose -f deploy/compose.yaml ps
+   docker compose -f deploy/compose.yaml logs --tail=100 app
+   ```
+
+   The image build runs the complete test gate. Caddy obtains HTTPS for your
+   domain; the backend port is not exposed to the internet. /healthz reports
+   process health, not NODERS connectivity. Compose restarts crashed processes;
+   an unhealthy container still needs an alert/operator investigation.
+5. Provision accounts in the persistent volume:
+
+   ```sh
+   docker compose -f deploy/compose.yaml exec app npm run auth:admin -- create --id admin --name Administrator --role operator
+   docker compose -f deploy/compose.yaml exec app npm run auth:admin -- issue --id admin --days 7
+   docker compose -f deploy/compose.yaml exec app npm run auth:admin -- create --id customer-owner --name Customer --role customer --tenant first-customer
+   docker compose -f deploy/compose.yaml exec app npm run auth:admin -- issue --id customer-owner --days 7
+   ```
+
+6. Open your HTTPS domain. Run Check connection, verify rights/party hosting,
+   then follow [HOSTED-NETWORKS.md](HOSTED-NETWORKS.md) for the controlled Devnet
+   workflow. Mainnet stays disabled.
+
+## Keep it running
+
+- Keep one app instance. Named volumes retain the identity and operations
+  databases across container recreation. Never use `docker compose down -v`
+  on a deployment you want to retain.
+- Take encrypted VM/disk snapshots after stopping the app for a consistent
+  backup; then restart it. Test restoring a snapshot to a separate VM.
+- Before upgrades, snapshot data and retain the previous Git commit/image.
+  Roll back code only when its database schema is compatible; otherwise restore
+  the matching snapshot. Do not overwrite uncertain-command records.
+- Monitor HTTPS and /healthz externally, disk space, restart count and unresolved
+  operations. Configure restart alerts. Log rotation is included in Compose.
+- Rotate/revoke access keys and ledger tokens; keep ledger credentials separately
+  scoped. Access keys expire; reissue before your demo if necessary.
+- Add monitoring, restore rehearsal and a multi-day soak before claiming
+  uninterrupted production operation. No test can guarantee days without failure.
+
+## What can be live today
+
+The portal, customer requests, admin review, service-contract operations,
+invoice attestations and dashboard can be hosted after configuration.
+Actual automated CC top-ups/traffic funding still need the NODERS-supported
+native APIs and verification. Current metrics are indexed attestations and the
+balance is manually observed. Continuous ledger coverage and production funding
+acceptance remain release gates; uploading the DAR alone does not provide them.
+
+## Official deployment references
+
+- [AWS Lightsail static IP](https://docs.aws.amazon.com/lightsail/latest/userguide/lightsail-create-static-ip.html)
+- [GCP persistent disks](https://docs.cloud.google.com/compute/docs/disks/persistent-disks)
+- [Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+- [Caddy HTTPS](https://caddyserver.com/docs/quick-starts/https)

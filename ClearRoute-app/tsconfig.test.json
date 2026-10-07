@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "types": ["node", "vitest/globals"] },
-  "include": ["src", "tests/frontend", "vitest.config.ts"]
+  "include": ["frontend", "tests/frontend", "vitest.config.ts"]
 }

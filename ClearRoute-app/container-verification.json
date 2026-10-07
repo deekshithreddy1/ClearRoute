@@ -1,0 +1,13 @@
+{
+  "testedAt": "2026-10-07T16:55:24.418Z",
+  "image": "sha256:4730a61ac94d0f37ad09c8c6a2e2bc9f8a1b9bed3606e153abbc60f628e705ec",
+  "passed": [
+    "frontend served",
+    "health endpoint",
+    "unauthenticated API rejected",
+    "login and HttpOnly cookie",
+    "operations API",
+    "persistent identity after restart"
+  ],
+  "nativeNetworkAccess": false
+}

@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
-import GasStation from '../../src/GasStation';
+import GasStation from '../../frontend/GasStation';
 
 const policy = { tenant:'atlas', enabled:true, batchBytes:200000, capacityLimitBytes:400000, remainingCapacityBytes:400000, binding:{party:'atlas::party',validator:'provider::party',domain:'domain'} };
 const state = { policies:[policy], requests:[], audit:[] };

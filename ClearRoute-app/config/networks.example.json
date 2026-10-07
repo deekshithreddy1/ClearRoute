@@ -1,0 +1,22 @@
+{
+  "devnet": {
+    "ledgerUrl": "https://ledger-api-json.participant.hackcanton-01.devnet.naas.noders.services",
+    "participantId": "hackcanton-devnet-3::12204a9d883d1158141d8f099d06dd2e42cb52615deb42da5a46f042c8d0e1dbdf0e",
+    "synchronizerId": "REPLACE_WITH_VERIFIED_DEVNET_SYNCHRONIZER",
+    "packageId": "a5d7aff449a19279433832cda0a58adc9632f832a15ce05d427a305bc4b012f5",
+    "writesEnabled": false,
+    "provider": {
+      "userId": "6577027c-41cb-472b-9499-36e7b96fa641",
+      "partyId": "REPLACE_WITH_PROVIDER_PARTY",
+      "tokenEnv": "CLEARROUTE_DEVNET_PROVIDER_TOKEN"
+    },
+    "customers": {
+      "first-customer": {
+        "name": "First customer",
+        "userId": "REPLACE_WITH_SCOPED_CUSTOMER_LEDGER_USER",
+        "partyId": "REPLACE_WITH_CUSTOMER_PARTY",
+        "tokenEnv": "CLEARROUTE_DEVNET_CUSTOMER_TOKEN"
+      }
+    }
+  }
+}

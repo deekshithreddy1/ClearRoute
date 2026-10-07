@@ -1,8 +1,15 @@
 node_modules/
 dist/
 dist-server/
+dist-backend/
 data/
 .env
+.env.*
+!.env.example
+config/networks.json
+deploy/*.env
+!deploy/*.env.example
+backups/
 *.log
 docs
 /evidence/

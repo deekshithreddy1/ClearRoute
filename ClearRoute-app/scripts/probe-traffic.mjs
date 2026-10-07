@@ -1,4 +1,4 @@
-import { localToken } from '../dist-server/localnet-client.js';
+import { localToken } from '../dist-backend/localnet-client.js';
 import { writeFileSync } from 'node:fs';
 for(const route of ['v0/wallet/balance','v0/admin/participant/global-domain-connection-config','v0/scan-proxy/amulet-rules','v0/wallet/user-status']) {
  const response=await fetch('http://127.0.0.1:3903/api/validator/'+route,{headers:{Authorization:`Bearer ${localToken('app-provider')}`},signal:AbortSignal.timeout(15000)});

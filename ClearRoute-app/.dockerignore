@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-server
+dist-backend
+data
+backups
+.git
+.env*
+*.log
+config/networks.json
+deploy/*.env
+evidence
