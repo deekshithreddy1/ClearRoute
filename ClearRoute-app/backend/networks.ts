@@ -14,21 +14,23 @@ const httpsEndpoint = z.string().url().superRefine((value, ctx) => {
 export const profileSchema = z.object({
   ledgerUrl: httpsEndpoint, participantId: z.string().min(10).max(300), synchronizerId: z.string().min(10).max(300),
   packageId: z.string().regex(/^[a-f0-9]{64}$/), writesEnabled: z.boolean().default(false),
+  allowSharedIdentity: z.boolean().default(false),
   provider: identity,
   customers: z.record(tenantKey, identity.extend({ name: z.string().min(1).max(100) }).strict()).default({}),
 }).strict().superRefine((p, ctx) => {
   const parties = [p.provider.partyId, ...Object.values(p.customers).map(i => i.partyId)];
   if (new Set(parties).size !== parties.length) ctx.addIssue({ code: 'custom', message: 'Provider and customers must have distinct parties.' });
   const tokenNames = [p.provider.tokenEnv, ...Object.values(p.customers).map(i => i.tokenEnv)];
-  if (new Set(tokenNames).size !== tokenNames.length) ctx.addIssue({ code: 'custom', message: 'Use independently scoped token references per identity.' });
+  if (!p.allowSharedIdentity && new Set(tokenNames).size !== tokenNames.length) ctx.addIssue({ code: 'custom', message: 'Use independently scoped token references per identity.' });
   const users = [p.provider.userId, ...Object.values(p.customers).map(i => i.userId)];
-  if (new Set(users).size !== users.length) ctx.addIssue({ code: 'custom', message: 'Use independently scoped ledger users per identity.' });
+  if (!p.allowSharedIdentity && new Set(users).size !== users.length) ctx.addIssue({ code: 'custom', message: 'Use independently scoped ledger users per identity.' });
 });
 export type Profile = z.infer<typeof profileSchema>;
 export type Profiles = Partial<Record<Network, Profile>>;
 export function loadProfiles(file?: string, env: NodeJS.ProcessEnv = process.env): Profiles {
   if (!file) return {};
   const profiles = z.object({ devnet: profileSchema.optional(), testnet: profileSchema.optional(), mainnet: profileSchema.optional() }).strict().parse(JSON.parse(readFileSync(file, 'utf8')));
+  if (profiles.testnet?.allowSharedIdentity || profiles.mainnet?.allowSharedIdentity) throw new Error('Shared ledger identities are allowed only for an explicitly configured Devnet test.');
   if (profiles.mainnet?.writesEnabled && env.CLEARROUTE_MAINNET_WRITES !== 'ENABLED') throw new Error('Mainnet writes require CLEARROUTE_MAINNET_WRITES=ENABLED.');
   const destinations = Object.values(profiles).map(p => new URL(p.ledgerUrl).origin);
   if (new Set(destinations).size !== destinations.length) throw new Error('Network profiles must use separate ledger destinations.');

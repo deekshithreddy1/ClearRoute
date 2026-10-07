@@ -13,3 +13,5 @@ backups/
 *.log
 docs
 /evidence/
+
+config/networks.*.json

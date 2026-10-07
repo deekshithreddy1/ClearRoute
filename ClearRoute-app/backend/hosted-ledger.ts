@@ -14,9 +14,12 @@ export function hostedLedger(env: NodeJS.ProcessEnv = process.env, transport: ty
       headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000),
     }); } catch { throw new AppError('LEDGER_UNCERTAIN', 'Ledger response unavailable. Reconcile the recorded command before submitting again.', 503); }
-    if (!response.ok) throw new AppError('LEDGER_REJECTED', `Ledger returned HTTP ${response.status}. Check the scoped identity and reconcile command outcomes.`, 502);
     const value = await response.text();
     if (value.length > 8_000_000) throw new AppError('LEDGER_RESPONSE_LIMIT', 'Ledger response exceeded the configured limit.', 502);
+    if (!response.ok) {
+      const detail = value.slice(0, 2000).replace(/\s+/g, ' ').trim();
+      throw new AppError('LEDGER_REJECTED', `Ledger returned HTTP ${response.status}${detail ? `: ${detail}` : ''}. Check the scoped identity and reconcile command outcomes.`, 502);
+    }
     try { return value ? JSON.parse(value) : {}; } catch { throw new AppError('LEDGER_RESPONSE_INVALID', 'Ledger returned an invalid response.', 502); }
   };
 }

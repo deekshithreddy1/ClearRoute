@@ -11,6 +11,7 @@ export function runtimeConfig(env: NodeJS.ProcessEnv = process.env) {
   const localnetConfig = path.resolve(env.CLEARROUTE_LOCALNET_CONFIG ?? path.join(dataDir, 'localnet.json'));
   const hosted = ['devnet', 'testnet', 'mainnet'].includes(networkMode);
   const origins = env.CLEARROUTE_PUBLIC_ORIGIN ? [z.string().url().parse(env.CLEARROUTE_PUBLIC_ORIGIN)] : [`http://127.0.0.1:${port}`, `http://localhost:${port}`, 'http://127.0.0.1:5173', 'http://localhost:5173'];
-  if (hosted && (mode !== 'required' || !env.CLEARROUTE_PUBLIC_ORIGIN?.startsWith('https://') || new URL(env.CLEARROUTE_PUBLIC_ORIGIN).origin !== env.CLEARROUTE_PUBLIC_ORIGIN)) throw new Error('Hosted networks require authentication and an exact HTTPS CLEARROUTE_PUBLIC_ORIGIN.');
-  return { mode, networkMode, port, host, dataDir, localnetConfig, hosted, secureCookies: hosted, profilesFile: env.CLEARROUTE_NETWORKS_FILE, origins };
+  const localHttpTest = env.CLEARROUTE_LOCAL_HTTP_TEST === '1' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(env.CLEARROUTE_PUBLIC_ORIGIN ?? '');
+  if (hosted && (mode !== 'required' || (!localHttpTest && (!env.CLEARROUTE_PUBLIC_ORIGIN?.startsWith('https://') || new URL(env.CLEARROUTE_PUBLIC_ORIGIN).origin !== env.CLEARROUTE_PUBLIC_ORIGIN)))) throw new Error('Hosted networks require authentication and an exact HTTPS CLEARROUTE_PUBLIC_ORIGIN.');
+  return { mode, networkMode, port, host, dataDir, localnetConfig, hosted, secureCookies: hosted && !localHttpTest, profilesFile: env.CLEARROUTE_NETWORKS_FILE, origins };
 }
