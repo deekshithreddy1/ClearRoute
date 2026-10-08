@@ -1,0 +1,13 @@
+# Optional overlay. Configure the private file and renewal secrets first.
+# Paths resolve relative to the first Compose file (deploy/compose.yaml).
+services:
+  app:
+    environment:
+      CLEARROUTE_OIDC_CONFIG_FILE: /run/secrets/clearroute-oidc.json
+    volumes:
+      - type: bind
+        source: ../config/oidc.json
+        target: /run/secrets/clearroute-oidc.json
+        read_only: true
+        bind:
+          create_host_path: false

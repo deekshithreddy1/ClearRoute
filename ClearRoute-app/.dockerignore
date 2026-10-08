@@ -12,3 +12,6 @@ config/networks.*.json
 config/oidc.json
 deploy/*.env
 evidence
+output
+pitch
+video

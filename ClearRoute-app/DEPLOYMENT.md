@@ -45,10 +45,12 @@ this version on ephemeral serverless storage or scale it across replicas.
 1. Create the VM, attach/reserve a stable public IP and point your domain's A
    record to it. Open TCP 80/443; restrict SSH to your administrator IP.
 2. Install Docker Engine and the Compose plugin using the official instructions
-   for your Ubuntu version. Clone the app repository and select main:
+   for your Ubuntu version. Clone the app repository and select the current pilot
+   branch. Do not assume `main` already contains the pilot:
 
    ```sh
    git clone https://github.com/deekshithreddy1/ClearRoute.git
+   git -C ClearRoute switch feature/hosted-cc-funding
    cd ClearRoute/ClearRoute-app
    cp config/networks.example.json config/networks.json
    cp deploy/app.env.example deploy/app.env
@@ -74,10 +76,10 @@ this version on ephemeral serverless storage or scale it across replicas.
 5. Provision accounts in the persistent volume:
 
    ```sh
-   docker compose -f deploy/compose.yaml exec app npm run auth:admin -- create --id admin --name Administrator --role operator
-   docker compose -f deploy/compose.yaml exec app npm run auth:admin -- issue --id admin --days 7
-   docker compose -f deploy/compose.yaml exec app npm run auth:admin -- create --id customer-owner --name Customer --role customer --tenant first-customer
-   docker compose -f deploy/compose.yaml exec app npm run auth:admin -- issue --id customer-owner --days 7
+   docker compose -f deploy/compose.yaml exec app node dist-backend/auth-admin.js --id admin --name Administrator --role operator create
+   docker compose -f deploy/compose.yaml exec app node dist-backend/auth-admin.js --id admin --days 7 issue
+   docker compose -f deploy/compose.yaml exec app node dist-backend/auth-admin.js --id customer-owner --name Customer --role customer --tenant first-customer create
+   docker compose -f deploy/compose.yaml exec app node dist-backend/auth-admin.js --id customer-owner --days 7 issue
    ```
 
 6. Open your HTTPS domain. Run Check connection, verify rights/party hosting,
@@ -85,6 +87,28 @@ this version on ephemeral serverless storage or scale it across replicas.
    workflow. Mainnet stays disabled.
 
 ## Keep it running
+
+### Optional renewable authentication
+
+The base Compose setup uses manually supplied tokens. Leave
+`CLEARROUTE_OIDC_CONFIG_FILE` empty for that initial test. Copy
+`config/oidc.example.json` to private `config/oidc.json`, confirm its subject and
+audience, and configure `CLEARROUTE_TOKEN_STORE_KEY` and the NODERS refresh token
+in private `deploy/app.env` before enabling renewal. A placeholder refresh token
+does not work. Keep the same encryption key across restarts.
+
+The optional overlay mounts the OIDC configuration and selects it:
+
+```sh
+docker compose -f deploy/compose.yaml -f deploy/compose.oidc.yaml up -d --build
+```
+
+Use both Compose files for subsequent lifecycle commands while renewal is enabled.
+The runtime process runs as UID 1000. The mounted JSON files must be readable by
+that UID. On a standard Ubuntu host owned by UID 1000, mode 600 is sufficient.
+Never make token-bearing files world-readable. Verify actual renewal with NODERS
+before describing the deployment as unattended. Do not print Compose's resolved
+configuration to shared logs because it includes secret environment values.
 
 - Keep one app instance. Named volumes retain the identity and operations
   databases across container recreation. Never use `docker compose down -v`

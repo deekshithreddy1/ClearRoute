@@ -246,3 +246,7 @@ Replaced the five-page pitch with a 12-slide investor introduction using origina
 ## Shareable Devnet walkthrough - 8 October 2026
 Created a narrated 1080p video using actual public funding screenshots and explanatory workflow scenes. Includes captions, thumbnail, upload copy and reproducible source. Clearly discloses pending recipient transfer and disconnected customer/billing flows. Acceptance: inspect scene frames, confirm decodable H.264/AAC output and audible non-clipping narration. No live transfer or application behavior change.
 
+
+## AWS clone readiness - 8 October 2026
+Default cloud configuration now leaves optional OIDC disabled until configured. Added an explicit renewal mount overlay, corrected the deployment branch and direct account-provisioning commands, and excluded pitch/video outputs from Docker context. Offline runtime test now excludes inherited ClearRoute deployment settings. Acceptance: npm run verify passed with public-funding and a missing OIDC path in the parent environment (91 backend, 43 frontend, typecheck and build); base and OIDC Compose configurations validated with example-only files. AWS container build, renewal and live transfers remain separate checks.
+

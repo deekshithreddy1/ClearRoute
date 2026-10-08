@@ -12,11 +12,14 @@ test('offline process starts and stops without connector databases or outbound r
   const probe = createServer().listen(0, '127.0.0.1'); await once(probe, 'listening');
   const address = probe.address(); if (!address || typeof address === 'string') throw new Error('Missing test port');
   await new Promise<void>(resolve => probe.close(() => resolve()));
+  // Preserve OS process settings, but never inherit a developer's live network,
+  // funding switches, credential paths or database configuration into this test.
+  const isolatedEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.toUpperCase().startsWith('CLEARROUTE_')));
   const child = spawn(process.execPath, ['--input-type=module', '--eval', `
     globalThis.fetch = async () => { process.stderr.write('UNEXPECTED_OUTBOUND_REQUEST'); process.exit(82); };
     await import('./dist-backend/index.js');
     setTimeout(() => process.emit('SIGTERM'), 5200);
-  `], { cwd: process.cwd(), windowsHide: true, env: { ...process.env, PORT: String(address.port), CLEARROUTE_DATA_DIR: directory, CLEARROUTE_MODE: 'demo', CLEARROUTE_AUTH_MODE: 'required', CLEARROUTE_NETWORK_MODE: 'offline' } });
+  `], { cwd: process.cwd(), windowsHide: true, env: { ...isolatedEnv, PORT: String(address.port), CLEARROUTE_DATA_DIR: directory, CLEARROUTE_MODE: 'demo', CLEARROUTE_AUTH_MODE: 'required', CLEARROUTE_NETWORK_MODE: 'offline' } });
   let output = '';
   child.stdout.on('data', data => { output += String(data); }); child.stderr.on('data', data => { output += String(data); });
   t.after(async () => {
