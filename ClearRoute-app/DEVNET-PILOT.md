@@ -100,6 +100,15 @@ demo, set `CLEARROUTE_DEVNET_WALLET_TOKEN` in the server's launching environment
 restart. Changing another terminal's environment does not update the running server.
 No passwords or refresh tokens are stored by this integration.
 
+For a long-running deployment, NODERS must issue a refresh token or service-account
+credential. Copy `config/oidc.example.json` to a private server secret, set its
+`expectedSubject` and `audience` to the claims NODERS actually issues, and configure
+`CLEARROUTE_OIDC_CONFIG_FILE`, `CLEARROUTE_TOKEN_STORE_KEY`, and the private refresh
+token in the deployment secret store. The broker encrypts rotated refresh tokens in
+`data/credentials/renewal.enc.json`; mount the data directory persistently and back it
+up securely. Test renewal before enabling transfers. If NODERS does not grant this
+flow, keep manual token rotation and leave sends disabled between rotations.
+
 If a command is uncertain, use **Reconcile original transfer**. A 404, timeout or empty
 history is not proof that no transfer happened. ClearRoute never automatically retries
 the monetary POST. Investigate the persisted tracking ID with NODERS if necessary;
