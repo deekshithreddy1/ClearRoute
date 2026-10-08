@@ -11,7 +11,7 @@ function cookie(req: Request) {
   return values.length === 1 ? values[0].slice(cookieName.length + 1) : '';
 }
 
-export function installAuth(app: Express, store: Store, options: AuthOptions) {
+export function installAuth(app: Express, store: Store, options: AuthOptions, publicRoutes?: () => void) {
   const mode = options.mode || 'required';
   const origins = new Set(options.origins || ['http://127.0.0.1:3001', 'http://localhost:3001', 'http://127.0.0.1:5173', 'http://localhost:5173']);
   const cookieOptions = { httpOnly: true, sameSite: 'strict' as const, secure: options.secureCookies ?? false, path: '/api' };
@@ -57,6 +57,7 @@ export function installAuth(app: Express, store: Store, options: AuthOptions) {
   app.post('/api/auth/logout', (req, res, next) => {
     try { if (mode !== 'demo') identities().logout(cookie(req)); res.clearCookie(cookieName, cookieOptions); res.status(204).end(); } catch (e) { next(e); }
   });
+  publicRoutes?.();
   app.use('/api', (req, res, next) => {
     try {
       // Caller-provided role/tenant headers have no authority in required mode.

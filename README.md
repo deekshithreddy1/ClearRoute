@@ -23,3 +23,20 @@ The older Quickstart workspace is not the deployment source.
 Branch flow: sprint branch → dev → main. main is the published, verified
 deployment candidate; hosted funding capability still requires the documented
 Devnet acceptance.
+
+## Why this project matters
+
+ClearRoute is the funding and billing layer for small Canton teams. A builder
+needs only a full Canton Party ID and a compatible validator/wallet to request a
+small CC allocation. The operator verifies the recipient, approves a bounded
+amount, sends a wallet offer, and records the wallet-confirmed result. This
+removes the first-transaction barrier without asking ClearRoute to hold a
+customer bank balance or inspect institutional banking activity.
+
+The future gas-station model can sponsor validator traffic from a segregated
+treasury and bill usage later. It still requires explicit consent, limits,
+audit evidence, custody controls and jurisdiction-specific legal review. This
+repository does not claim KYC/AML coverage, licensing or regulated-custody
+approval.
+
+See [the application README](ClearRoute-app/README.md), [the Devnet pilot guide](ClearRoute-app/DEVNET-PILOT.md), and [the Daml repository](https://github.com/deekshithreddy1/ClearRoute-DAML).

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "noders-devnet",
+    "tokenUrl": "https://keycloak.naas.noders.services/realms/noders-appsfactory/protocol/openid-connect/token",
+    "clientId": "web-app-ui-hackcanton-01-devnet",
+    "expectedSubject": "6577027c-41cb-472b-9499-36e7b96fa641",
+    "audience": "https://hackcanton-01.devnet.naas.noders.services",
+    "grant": "refresh_token",
+    "refreshTokenEnv": "CLEARROUTE_NODERS_REFRESH_TOKEN",
+    "tokenEnvs": [
+      "CLEARROUTE_DEVNET_WALLET_TOKEN",
+      "CLEARROUTE_DEVNET_PROVIDER_TOKEN",
+      "CLEARROUTE_DEVNET_CUSTOMER_TOKEN"
+    ]
+  }
+]

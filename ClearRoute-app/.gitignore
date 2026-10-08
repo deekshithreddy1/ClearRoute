@@ -15,3 +15,4 @@ docs
 /evidence/
 
 config/networks.*.json
+config/oidc.json

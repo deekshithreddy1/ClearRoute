@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import App from './App';
+import { BrandLogo } from './Brand';
 import OperationsApp from './OperationsApp';
 import { z } from 'zod';
 import { AccountContext } from './account-storage';
@@ -65,7 +66,8 @@ export default function AuthGate() {
     <div className="session-banner"><span>{status?.networkMode === 'offline' ? 'Offline · Canton connections disabled' : `${status?.networkMode} · Canton Network`}{status?.mode === 'demo' ? ' · Demo role switching enabled' : ` · ${principal?.name}`}</span>{principal && <button onClick={() => void logout()} disabled={busy}>Sign out</button>}{error && <span role="alert">{error}</span>}</div>
     {principal ? <OperationsApp key={principal.id} identity={principal} initialNetwork={status?.networkMode === 'testnet' || status?.networkMode === 'mainnet' ? status.networkMode : 'devnet'} /> : <App />}
   </AccountContext.Provider>;
-  return <main className="auth-page"><form onSubmit={login} className="auth-card"><span className="eyebrow">CLEARROUTE</span><h1>Sign in</h1><p>Use the access key issued by your administrator. Your account determines which customer and actions you can access.</p>
+  return <main className="auth-page"><form onSubmit={login} className="auth-card"><BrandLogo /><h1>Sign in</h1><p>Use the access key issued by your administrator. Your account determines which customer and actions you can access.</p>
+    {status?.networkMode === 'devnet' && <p>New tester? <a href="/funding">Request Devnet CC without an account</a>.</p>}
     {!status && !error && <p role="status">Checking session…</p>}
     {error && <p role="alert">{error}</p>}
     {status && <><label htmlFor="access-key">Access key</label><input id="access-key" type="password" autoComplete="off" value={accessKey} onChange={event => setAccessKey(event.target.value)} required disabled={busy} /><button className="button" disabled={busy || !accessKey.trim()}>{busy ? 'Signing in…' : 'Sign in'}</button><p>{status.networkMode === 'offline' ? 'Offline testing: no Canton connections or transactions.' : 'Canton Network · Access is scoped to your account.'}</p></>}

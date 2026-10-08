@@ -167,3 +167,20 @@ test('procurement uses three closed months, separates CC transfers, and fails cl
     assert.equal(f.service.analytics('devnet').treasury?.stale, true);
   } finally { f.service.close(); }
 });
+
+test('CC recipients persist, remain tenant scoped, and cannot change on request replay', () => {
+  const f = fixture();
+  const input = { key: randomUUID(), mode: 'DirectTopUp', amount: '1.0000000001', reason: 'Devnet testing', recipient: { company: 'Alice startup', email: 'alice@example.com', partyId: 'alice::treasury', validator: 'NODERS', ownershipReference: 'review-ticket-1' } };
+  try {
+    const request = f.service.request('devnet', alice, input) as any;
+    assert.equal((f.service.request('devnet', alice, input) as any).id, request.id);
+    assert.throws(() => f.service.request('devnet', alice, { ...input, recipient: { ...input.recipient, partyId: 'other::treasury' } }), /Recipient changed/);
+    assert.throws(() => f.service.request('devnet', bob, { ...input, recipient: { ...input.recipient, email: 'invalid' } }));
+    assert.equal(f.service.state('devnet', bob).recipients.length, 0);
+    assert.throws(() => f.service.reviewRequest('devnet', alice, request.id, { status: 'approved', note: 'self approval' }), /Operator/);
+    f.service.reviewRequest('devnet', op, request.id, { status: 'approved', note: 'Ownership review pending before transfer' });
+    assert.equal(f.calls.length, 0);
+    const reopened = f.open();
+    try { assert.equal(reopened.state('devnet', alice).recipients[0].partyId, input.recipient.partyId); assert.equal(reopened.state('devnet', alice).capabilities.nativeTransfers, false); } finally { reopened.close(); }
+  } finally { f.service.close(); }
+});

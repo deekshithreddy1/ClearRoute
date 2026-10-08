@@ -8,5 +8,7 @@ backups
 .env*
 *.log
 config/networks.json
+config/networks.*.json
+config/oidc.json
 deploy/*.env
 evidence

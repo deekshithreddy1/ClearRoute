@@ -218,3 +218,23 @@ request review, identity v1-to-v2 migration and stale frontend response checks.
 The legacy wallet fixture now matches the existing verifier's createdAmulets
 evidence shape; the verifier was not weakened. No browser or live hosted-network
 test was run. DAR content was unchanged and its release SHA-256 was rechecked.
+
+## Hosted CC funding request UI
+Customer CC requests persist company, contact, recipient and ownership evidence with tenant isolation and idempotency. Operator review does not execute a transfer. Wallet connectivity and verified native receipts remain a separate integration gate. Acceptance: request persists, mismatched replay fails, customer cannot review, and approved requests display awaiting wallet rather than delivered.
+
+### ClearRoute DNA branding
+Added a decorative SVG double helix and matching route mark to the hosted workspace. Refined typography, form heights, responsive cards, status wrapping and party identifier overflow. CC request notes are optional with a stable default description. Automated gate covers request behavior; visual browser review remains a separate step.
+
+Original ClearRoute SVG wordmark and symbol supplied by the owner now replace the generated DNA logo. Hosted workspace palette uses navy/cyan; decorative DNA remains separate in the overview hero. Favicon and sign-in branding use the same original assets.
+# Public Devnet funding pilot
+
+Visitor `/funding` intake and secret receipt links; authenticated operator queue;
+manual recipient review; NODERS treasury identity/network checks; exact capped CC
+transfer offers with immutable tracking IDs and wallet-status reconciliation.
+No customer ledger account or new DAR is required for public requests. Devnet only.
+
+Acceptance: isolated tests cover private receipt access, origin/role enforcement,
+exact decimals, caps, idempotent intake, no repeat monetary POST after uncertainty or
+restart, malformed completion evidence, wallet identity/network mismatch, and customer
+UI distinction between approval and delivery. Run full `npm run verify`. Live transfer
+and HTTPS sharing remain separate user-controlled checks described in DEVNET-PILOT.md.

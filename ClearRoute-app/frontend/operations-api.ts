@@ -8,6 +8,7 @@ export const operationsSchema = z.object({
   health: z.object({ status: z.string(), checkedAt: z.string().nullable(), detail: z.string() }),
   accounts: z.array(z.object({ tenant: z.string(), name: z.string(), party: z.string(), status: z.string(), limitUsd: z.string(), maxUnits: z.string() })),
   requests: z.array(z.object({ id: z.string(), tenant: z.string(), mode: z.string(), amount: z.string(), reason: z.string(), status: z.string(), createdAt: z.string(), decision: z.string().nullable() })).default([]),
+  recipients: z.array(z.object({ requestId: z.string(), company: z.string(), email: z.string(), partyId: z.string(), validator: z.string(), ownershipReference: z.string() })).default([]),
   contracts: z.array(z.object({ id: z.string(), template: z.string(), tenant: z.string(), createdAt: z.string(), updateId: z.string(), payload: z.record(z.unknown()) })),
   commands: z.array(z.object({ id: z.string(), tenant: z.string(), action: z.string(), status: z.string(), error: z.string().nullable(), createdAt: z.string(), result: z.object({ updateId: z.string(), offset: z.string() }).nullable() })),
   audit: z.array(z.object({ id: z.string(), at: z.string(), actor: z.string(), kind: z.string(), tenant: z.string().nullable(), detail: z.unknown() })),

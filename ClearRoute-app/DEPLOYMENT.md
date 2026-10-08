@@ -105,7 +105,7 @@ this version on ephemeral serverless storage or scale it across replicas.
 
 The portal, customer requests, admin review, service-contract operations,
 invoice attestations and dashboard can be hosted after configuration.
-Actual automated CC top-ups/traffic funding still need the NODERS-supported
+Production CC top-ups/traffic funding still need the NODERS-supported
 native APIs and verification. Current metrics are indexed attestations and the
 balance is manually observed. Continuous ledger coverage and production funding
 acceptance remain release gates; uploading the DAR alone does not provide them.
@@ -116,3 +116,15 @@ acceptance remain release gates; uploading the DAR alone does not provide them.
 - [GCP persistent disks](https://docs.cloud.google.com/compute/docs/disks/persistent-disks)
 - [Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
 - [Caddy HTTPS](https://caddyserver.com/docs/quick-starts/https)
+
+## CC funding requests while wallet onboarding is pending
+After building and restarting, open CC funding in the hosted workspace. Existing customer accounts can register a receiving party and request an exact CC amount. Operators review the saved request and ownership evidence. Approval does not verify ownership or submit a transfer. Recipient details are snapshots attached to requests and do not change existing service-agreement parties. Requests persist in operations.sqlite and are isolated by network and customer.
+The wallet connector, live balance, transfer submission, delivery evidence and automatic TopUpReceipt creation are not enabled by this UI. Connect and validate those against NODERS after onboarding. Never convert an approved request into a confirmed delivery without native evidence. Public signup remains separate from this authenticated request flow.
+
+## Public Devnet pilot
+The separate **Demo transfers** operator page and public `/funding` page now support
+visitor requests and a NODERS Devnet transfer-offer adapter. See [DEVNET-PILOT.md](DEVNET-PILOT.md)
+for activation, treasury variables, recipient requirements, HTTPS sharing and failure
+handling. This pilot does not create app customer accounts, service agreements or
+TopUpReceipt contracts. It uses wallet-status evidence, not the older attested records.
+It does not enable Mainnet or replace the production-readiness requirements above.

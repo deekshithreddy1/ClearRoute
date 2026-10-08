@@ -12,8 +12,10 @@ import type { OnboardingStore } from './onboarding.js';
 import type { WalletFunding } from './wallet-funding.js';
 import type { Operations } from './operations.js';
 import { installOperations } from './operations-http.js';
+import type { PublicFunding } from './public-funding.js';
+import { publicFundingRoutes, operatorFundingRoutes } from './public-funding-http.js';
 
-export function createApp(store: Store, staticPath?: string, localnet?: Localnet, traffic?: Traffic, metering?: Metering, sponsorship?: Sponsorship, auth: AuthOptions = {}, onboarding?: OnboardingStore, walletFunding?: WalletFunding, operations?: Operations) {
+export function createApp(store: Store, staticPath?: string, localnet?: Localnet, traffic?: Traffic, metering?: Metering, sponsorship?: Sponsorship, auth: AuthOptions = {}, onboarding?: OnboardingStore, walletFunding?: WalletFunding, operations?: Operations, publicFunding?: PublicFunding) {
   const app = express();
   app.disable('x-powered-by');
   app.use((_req, res, next) => {
@@ -29,7 +31,9 @@ export function createApp(store: Store, staticPath?: string, localnet?: Localnet
   });
   app.use(express.json({ limit: '24kb' }));
   app.get('/healthz', (_req, res) => res.setHeader('Cache-Control', 'no-store').status(200).json({ service: 'clearroute', status: 'ok' }));
-  installAuth(app, store, auth);
+  const devnetFunding = auth.networkMode === 'devnet' && auth.mode !== 'demo' ? publicFunding : undefined;
+  installAuth(app, store, auth, () => publicFundingRoutes(app, devnetFunding, auth.origins ?? ['http://127.0.0.1:3001', 'http://localhost:3001', 'http://127.0.0.1:5173', 'http://localhost:5173']));
+  operatorFundingRoutes(app, devnetFunding);
   installOperations(app, operations, auth.mode === 'demo');
   // Hosted deployments must never expose fixture financial mutations or the old
   // loopback connectors, even to an authenticated operator.

@@ -33,6 +33,7 @@ export class Operations {
       CREATE TABLE IF NOT EXISTS audit(id TEXT PRIMARY KEY,network TEXT,at TEXT,actor TEXT,tenant TEXT,kind TEXT,detail TEXT);
       CREATE TABLE IF NOT EXISTS settings(network TEXT,key TEXT,value TEXT,PRIMARY KEY(network,key));
       CREATE TABLE IF NOT EXISTS business_refs(network TEXT,kind TEXT,ref TEXT,commandId TEXT,PRIMARY KEY(network,kind,ref));
+      CREATE TABLE IF NOT EXISTS funding_recipients(requestId TEXT PRIMARY KEY,body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS funding_requests(id TEXT PRIMARY KEY,network TEXT,tenant TEXT,requestKey TEXT,mode TEXT,amount TEXT,reason TEXT,status TEXT,createdAt TEXT,decision TEXT,UNIQUE(network,tenant,requestKey));
       UPDATE commands SET status='uncertain',error='Service restarted before confirmation; reconcile this command.' WHERE status='submitting';`);
     try {
@@ -67,13 +68,14 @@ export class Operations {
     this.profile(n);
     if (s.role !== 'customer' || !s.tenantId) fail('FORBIDDEN', 'A customer account is required.', 403);
     this.account(n, s.tenantId!);
-    const value = z.object({ key: z.string().uuid(), mode: z.enum(['ManagedUsage', 'DirectTopUp']), amount: amount.refine(v => fixed(v) > 0n), reason: z.string().trim().min(3).max(300) }).strict().parse(input);
+    const value = z.object({ key: z.string().uuid(), mode: z.enum(['ManagedUsage', 'DirectTopUp']), amount: amount.refine(v => fixed(v) > 0n), reason: z.string().trim().min(3).max(300), recipient: z.object({ company: z.string().trim().min(2).max(100), email: z.string().email().max(254), partyId: z.string().min(10).max(300), validator: z.string().trim().min(3).max(300), ownershipReference: z.string().trim().min(3).max(300) }).strict().optional() }).strict().parse(input);
     return this.transaction(() => {
       const old = this.db.prepare('SELECT * FROM funding_requests WHERE network=? AND tenant=? AND requestKey=?').get(n, s.tenantId!, value.key) as Row | undefined;
-      if (old) { if (old.mode !== value.mode || old.amount !== value.amount || old.reason !== value.reason) fail('IDEMPOTENCY_CONFLICT', 'Request key was used for different input.'); return old; }
+      if (old) { if (JSON.stringify(value.recipient ?? null) !== ((this.db.prepare('SELECT body FROM funding_recipients WHERE requestId=?').get(old.id) as Row | undefined)?.body ?? 'null')) fail('IDEMPOTENCY_CONFLICT', 'Recipient changed for the saved request.'); if (old.mode !== value.mode || old.amount !== value.amount || old.reason !== value.reason) fail('IDEMPOTENCY_CONFLICT', 'Request key was used for different input.'); return old; }
       if (this.db.prepare("SELECT id FROM funding_requests WHERE network=? AND tenant=? AND status='pending'").get(n, s.tenantId!)) fail('REQUEST_PENDING', 'Wait for review of your existing request.');
       const id = randomUUID();
       this.db.prepare('INSERT INTO funding_requests VALUES (?,?,?,?,?,?,?,?,?,?)').run(id, n, s.tenantId!, value.key, value.mode, value.amount, value.reason, 'pending', iso(this.now()), null);
+      if (value.recipient) this.db.prepare('INSERT INTO funding_recipients VALUES (?,?)').run(id, JSON.stringify(value.recipient));
       this.event(n, s, 'funding.requested', { id, ...value }, s.tenantId);
       return this.db.prepare('SELECT * FROM funding_requests WHERE id=?').get(id);
     });
@@ -252,7 +254,7 @@ export class Operations {
     const audit = allowed(this.db.prepare('SELECT * FROM audit WHERE network=? ORDER BY at DESC').all(n) as Row[]).slice(0, 100).map(r => ({ ...r, detail: JSON.parse(r.detail) }));
     return { network: n, configured: !!this.profiles[n], writesEnabled: !!this.profiles[n]?.writesEnabled,
       health: this.get(n, 'health', { status: 'unchecked', checkedAt: null, detail: 'Run a connection check before submitting.' }),
-      accounts, contracts, commands, audit, requests: allowed(this.db.prepare('SELECT * FROM funding_requests WHERE network=? ORDER BY createdAt DESC').all(n) as Row[]).slice(0, 100), analytics: s.role === 'operator' ? this.analytics(n) : null,
+      accounts, contracts, commands, audit, requests: allowed(this.db.prepare('SELECT * FROM funding_requests WHERE network=? ORDER BY createdAt DESC').all(n) as Row[]).slice(0, 100), recipients: allowed(this.db.prepare('SELECT r.tenant,r.network,f.requestId,f.body FROM funding_recipients f JOIN funding_requests r ON r.id=f.requestId WHERE r.network=?').all(n) as Row[]).map(r => ({ requestId: r.requestId, ...JSON.parse(r.body) })), analytics: s.role === 'operator' ? this.analytics(n) : null,
       capabilities: { serviceContracts: !!this.profiles[n], nativeTransfers: false, trafficPurchases: false, balance: 'operator-attested' },
       packageName: 'clearroute-service', packageId: this.profiles[n]?.packageId ?? null,
     };
