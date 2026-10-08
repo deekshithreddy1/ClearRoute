@@ -238,3 +238,7 @@ exact decimals, caps, idempotent intake, no repeat monetary POST after uncertain
 restart, malformed completion evidence, wallet identity/network mismatch, and customer
 UI distinction between approval and delivery. Run full `npm run verify`. Live transfer
 and HTTPS sharing remain separate user-controlled checks described in DEVNET-PILOT.md.
+
+## Investor pitch rebuild - 8 October 2026
+Replaced the five-page pitch with a 12-slide investor introduction using original branding, actual public-page screenshots, sourced engineering metrics, proposed economics and explicit pilot milestones. Acceptance: every page rendered and visually reviewed; pricing distinguished from revenue; source and screenshots included for repeatable edits. No application behavior changed.
+
