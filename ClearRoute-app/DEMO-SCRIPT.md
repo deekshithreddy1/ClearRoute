@@ -1,5 +1,15 @@
 # ClearRoute demo video script
 
+**Current shareable video:** `output/video/clearroute-demo.mp4` is a narrated
+product walkthrough with real public-page screenshots. It does not show completed
+recipient delivery. Upload guidance is in `output/video/YOUTUBE-UPLOAD.md`.
+
+The script below is a future live-recording plan. Public Devnet pilot transfers
+currently do not synchronize with customer accounts, service billing or the
+overview financial metrics. Do not imply that a pilot transfer updates those
+records. Record actual recipient acceptance and delivery evidence before claiming
+an end-to-end native transfer demonstration.
+
 Target length: 4-5 minutes. Record the browser and a small face/voice window only
 if desired. Use a clean public HTTPS deployment for the final recording; the local
 URL is suitable for rehearsal only.

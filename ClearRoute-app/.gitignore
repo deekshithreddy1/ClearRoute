@@ -16,3 +16,4 @@ docs
 
 config/networks.*.json
 config/oidc.json
+output/video/build/

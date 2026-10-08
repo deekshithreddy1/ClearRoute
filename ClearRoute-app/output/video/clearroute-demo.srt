@@ -1,0 +1,167 @@
+1
+00:00:00,000 --> 00:00:05,222
+Meet ClearRoute, a Canton Coin funding application for teams building on Canton.
+
+2
+00:00:05,222 --> 00:00:10,443
+This walkthrough shows the current Devnet product and the intended transfer journey.
+
+3
+00:00:10,443 --> 00:00:13,489
+We have verified the sender wallet connection.
+
+4
+00:00:13,489 --> 00:00:17,841
+A complete transfer to a volunteer recipient is still pending.
+
+5
+00:00:18,875 --> 00:00:26,404
+Small teams need a way to request C C, get a funding decision, and track what happened.
+
+6
+00:00:26,404 --> 00:00:29,505
+ClearRoute brings that work into one application.
+
+7
+00:00:29,505 --> 00:00:33,491
+The first pilot focuses on controlled wallet top ups.
+
+8
+00:00:33,491 --> 00:00:36,591
+Purchasing validator traffic is a separate operation.
+
+9
+00:00:37,625 --> 00:00:40,561
+This is the actual public funding page.
+
+10
+00:00:40,561 --> 00:00:46,013
+A builder can request Devnet Canton Coin without first creating a ClearRoute account.
+
+11
+00:00:46,013 --> 00:00:53,143
+The form asks for a team name, contact email, full Canton Party I D, wallet provider, amount,
+
+12
+00:00:53,143 --> 00:00:54,401
+and testing purpose.
+
+13
+00:00:54,401 --> 00:00:57,756
+The page never asks for a private key.
+
+14
+00:00:58,792 --> 00:01:05,278
+The recipient must use an onboarded Devnet wallet that can receive and accept Splice transfer offers.
+
+15
+00:01:05,278 --> 00:01:10,548
+A party created in a participant console alone does not establish that capability.
+
+16
+00:01:10,548 --> 00:01:16,224
+For a NODERS hosted wallet, the provider field can say NODERS slash Splice wallet.
+
+17
+00:01:16,224 --> 00:01:19,467
+The first planned test is one C C.
+
+18
+00:01:20,500 --> 00:01:26,119
+The operator opens Demo transfers, checks the treasury wallet, and reviews the request.
+
+19
+00:01:26,119 --> 00:01:30,441
+The operator verifies the recipient and records an approval decision.
+
+20
+00:01:30,441 --> 00:01:37,789
+The pilot allows up to ten C C per request and one hundred C C of total
+
+21
+00:01:37,789 --> 00:01:40,382
+reserved or delivered exposure, excluding fees.
+
+22
+00:01:40,382 --> 00:01:42,976
+Approval itself does not transfer coins.
+
+23
+00:01:44,000 --> 00:01:49,399
+After approval and enabling sends, the operator submits a tracked transfer offer.
+
+24
+00:01:49,399 --> 00:01:55,248
+The recipient opens their own wallet, verifies the sender and amount, and accepts.
+
+25
+00:01:55,248 --> 00:01:57,947
+ClearRoute checks the original transfer status.
+
+26
+00:01:57,947 --> 00:02:04,696
+If the outcome is uncertain, it reconciles that same transfer rather than submitting another payment.
+
+27
+00:02:04,696 --> 00:02:10,095
+This sequence still needs a volunteer wallet for a complete live demonstration.
+
+28
+00:02:11,125 --> 00:02:18,219
+Success means the application shows C C delivered with the wallet reported transaction reference, and the recipient
+
+29
+00:02:18,219 --> 00:02:19,054
+confirms receipt.
+
+30
+00:02:19,054 --> 00:02:25,731
+A click on Send, an approval, or a balance change alone is not our completion criterion.
+
+31
+00:02:25,731 --> 00:02:30,321
+This video does not claim a completed native C C transfer.
+
+32
+00:02:31,333 --> 00:02:38,595
+The latest verification run passed ninety one backend tests and forty three frontend tests, followed by the
+
+33
+00:02:38,595 --> 00:02:39,450
+production build.
+
+34
+00:02:39,450 --> 00:02:44,149
+The sender wallet identity, Devnet connection, and balance check also passed.
+
+35
+00:02:44,149 --> 00:02:50,129
+Public pilot requests remain separate from the signed in customer funding page and billing.
+
+36
+00:02:50,129 --> 00:02:54,828
+They are free Devnet tests and do not automatically create invoices.
+
+37
+00:02:55,833 --> 00:03:02,628
+We are looking for one volunteer with a compatible NODERS Devnet wallet to receive a one C
+
+38
+00:03:02,628 --> 00:03:03,827
+C test offer.
+
+39
+00:03:03,827 --> 00:03:08,223
+Share only your full wallet Party I D and wallet provider.
+
+40
+00:03:08,223 --> 00:03:10,221
+Never share passwords or tokens.
+
+41
+00:03:10,221 --> 00:03:13,418
+ClearRoute helps builders request funding and track delivery.
+
+42
+00:03:13,418 --> 00:03:19,813
+Visit the project repository linked in the description, and contact the builder to join the pilot.

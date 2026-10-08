@@ -242,3 +242,7 @@ and HTTPS sharing remain separate user-controlled checks described in DEVNET-PIL
 ## Investor pitch rebuild - 8 October 2026
 Replaced the five-page pitch with a 12-slide investor introduction using original branding, actual public-page screenshots, sourced engineering metrics, proposed economics and explicit pilot milestones. Acceptance: every page rendered and visually reviewed; pricing distinguished from revenue; source and screenshots included for repeatable edits. No application behavior changed.
 
+
+## Shareable Devnet walkthrough - 8 October 2026
+Created a narrated 1080p video using actual public funding screenshots and explanatory workflow scenes. Includes captions, thumbnail, upload copy and reproducible source. Clearly discloses pending recipient transfer and disconnected customer/billing flows. Acceptance: inspect scene frames, confirm decodable H.264/AAC output and audible non-clipping narration. No live transfer or application behavior change.
+
