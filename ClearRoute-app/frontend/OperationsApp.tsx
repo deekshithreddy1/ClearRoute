@@ -82,6 +82,7 @@ export default function OperationsApp({ identity, initialNetwork = 'devnet' }: {
       if (current === generation.current) { setData(next); setError(''); }
       if (operator && network === 'devnet') {
         try {
+          await fundingApi('devnet-funding/check', {});
           const funding = await fundingApi('devnet-funding');
           if (current === generation.current) setWallet(funding.wallet ?? null);
         } catch { if (current === generation.current) setWallet(null); }
