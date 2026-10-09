@@ -2,18 +2,19 @@
 import { Wallet, ArrowUpRight, Clock3 } from 'lucide-react';
 import type { OperationsState } from './operations-api';
 
-type Props = { state: OperationsState; operator: boolean; busy: boolean; send: (route: string, body: unknown) => Promise<boolean> };
-export function CcFunding({ state, operator, busy, send }: Props) {
+type WalletSnapshot = { party: string; balanceCc: string; checkedAt: string };
+type Props = { state: OperationsState; operator: boolean; busy: boolean; send: (route: string, body: unknown) => Promise<boolean>; wallet?: WalletSnapshot | null };
+export function CcFunding({ state, operator, busy, send, wallet }: Props) {
   const key = useRef(crypto.randomUUID());
   const [amount, setAmount] = useState('1');
   const requests = state.requests.filter(r => r.mode === 'DirectTopUp');
   const pending = state.requests.some(r => r.status === 'pending');
   return <div>
     <section className="ops-card cc-funding-hero"><div><span className="ops-kicker">DIRECT CANTON COIN FUNDING</span><h2>CC for your next transaction.</h2><p>Request coins for your startup’s treasury. Track the review and delivery from one place.</p></div><Wallet size={42} /></section>
-    <div className="ops-alert" role="status"><Clock3 size={20}/><p><strong>Treasury wallet connection pending</strong><br/>Requests and reviews are available. CC transfers will become available after the treasury wallet is connected and verified.</p></div>
+    <div className={`ops-alert${operator && wallet ? '' : ' attention'}`} role="status"><Clock3 size={20}/><p><strong>{operator && wallet ? `Treasury wallet connected · ${wallet.balanceCc} CC available` : 'Treasury wallet connection pending'}</strong><br/>{operator && wallet ? 'The NODERS wallet balance is verified. Review each recipient before delivery.' : operator ? 'Requests and reviews are available. CC transfers will become available after the treasury wallet is connected and verified.' : 'Submit your party and validator details. The ClearRoute operator will verify the destination before delivery.'}</p></div>
     <div className="ops-two-column">
       <section className="ops-card"><span className="ops-kicker">{operator ? 'FUNDING DESK' : 'YOUR NEXT TOP-UP'}</span><h2>{operator ? 'Review before delivery' : 'Request Canton Coin'}</h2>
-        {operator ? <><p>{requests.filter(r => r.status === 'pending').length} requests awaiting review</p><p>{requests.filter(r => r.status === 'approved').length} approved requests awaiting wallet connection</p><p>Treasury balance: Not available</p><button className="ops-button" disabled>Connect treasury to enable transfers</button></> :
+        {operator ? <><p>{requests.filter(r => r.status === 'pending').length} requests awaiting review</p><p>{requests.filter(r => r.status === 'approved').length} approved requests awaiting delivery</p><p>Treasury balance: {wallet ? `${wallet.balanceCc} CC` : 'Not available'}</p><button className="ops-button" disabled={!wallet}>Connect treasury to enable transfers</button></> :
         <form className="ops-form-grid" onSubmit={async e => { e.preventDefault(); const form = e.currentTarget; const f = new FormData(form); const ok = await send('requests', { key: key.current, mode: 'DirectTopUp', amount, reason: String(f.get('reason')).trim() || 'CC funding for Canton application activity', recipient: { company: String(f.get('company')), email: String(f.get('email')), partyId: String(f.get('partyId')).trim(), validator: String(f.get('validator')), ownershipReference: String(f.get('ownershipReference')) } }); if (ok) { key.current = crypto.randomUUID(); form.reset(); setAmount('1'); } }}>
           <label className="ops-field">Company name<input name="company" required minLength={2} maxLength={100}/></label>
           <label className="ops-field">Contact email<input name="email" type="email" required maxLength={254}/></label>
