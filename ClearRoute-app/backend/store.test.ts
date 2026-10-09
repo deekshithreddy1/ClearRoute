@@ -86,6 +86,14 @@ test('15-day windows are half-open and invoice replay does not issue twice',()=>
   assert.equal(f.store.mutation(f.operator,'invoice','close',{},()=>f.store.closePeriod(f.operator,'atlas')).id,invoice.id);
   assert.throws(()=>f.store.closePeriod(f.operator,'atlas'),/still open/);f.store.close();
 });
+test('automatic billing closes each due 15-day period exactly once',()=>{
+  const f=fixture();activate(f);f.store.usage(f.atlas,{tenantId:'atlas',trafficBytes:1000,description:'Automatic billing'});
+  f.store.setMeta('clock',String(START+PERIOD));
+  const issued=f.store.autoCloseDuePeriods();
+  assert.equal(issued.length,1);assert.equal(issued[0].tenantId,'atlas');
+  assert.equal(f.store.autoCloseDuePeriods().length,0);
+  assert.equal(f.store.state(f.atlas).invoices.length,1);f.store.close();
+});
 test('partial payments reconcile without overpayment or duplicate reference',()=>{
   const f=fixture();activate(f);f.store.usage(f.atlas,{tenantId:'atlas',trafficBytes:10000,description:'Business workflow'});f.store.setMeta('clock',String(START+PERIOD));
   const invoice=f.store.closePeriod(f.operator,'atlas');const payment={amountUsd:'0.02',rail:'USD',reference:'sim-payment-1'};

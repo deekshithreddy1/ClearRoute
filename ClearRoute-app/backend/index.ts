@@ -62,6 +62,7 @@ if (publicFunding) poll('Devnet public transfer reconciliation', () => publicFun
 if (broker) poll('Credential renewal', () => broker.tick(), 30000);
 if (traffic) poll('Traffic reconciliation', () => traffic.tick(), 5000);
 if (metering) poll('Metering', () => metering.sync(), 15000);
+poll('Automatic 15-day invoice closing', () => { store.autoCloseDuePeriods(); return Promise.resolve(); }, 60000);
 const server = app.listen(port, config.host, () => console.log(`ClearRoute: http://${config.host}:${port}; authentication=${config.mode}; network=${config.networkMode}. Native funding requires a separately verified connector.`));
 let closing = false;
 for (const signal of ['SIGTERM', 'SIGINT'] as const) process.on(signal, () => {

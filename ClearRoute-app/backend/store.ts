@@ -144,8 +144,9 @@ export class Store {
     this.event('topup.completed', `${format(cc, 8)} simulated CC delivered. This does not purchase validator traffic.`, tenant.id);
     return { id: topupId, status: 'completed', reference, chargeUsd: format(amount, 6) };
   }
-  closePeriod(session: Session, tenantId: string) {
-    this.operator(session); const tenant = this.authorize(session, tenantId);
+  private closePeriodInternal(tenantId: string) {
+    const tenant = this.row('SELECT * FROM tenants WHERE id=?', tenantId);
+    if (!tenant) throw new AppError('NOT_FOUND', 'Customer account not found.', 404);
     const start = Number(tenant.periodStart); const end = start + PERIOD;
     if (this.now() < end) throw new AppError('PERIOD_OPEN', 'This 15-day period is still open. Use the demo clock to advance 15 days.');
     const charges = this.rows('SELECT * FROM charges WHERE tenantId=? AND invoiceId IS NULL AND createdAt>=? AND createdAt<? ORDER BY createdAt,id', tenantId, start, end);
@@ -156,6 +157,18 @@ export class Store {
     this.db.prepare('UPDATE tenants SET periodStart=? WHERE id=?').run(end, tenantId);
     this.event('invoice.issued', `${invoiceId}: $${format(total, 6)} for a completed 15-day demo period.`, tenantId);
     return { id: invoiceId, totalUsd: format(total, 6) };
+  }
+  closePeriod(session: Session, tenantId: string) { this.operator(session); this.authorize(session, tenantId); return this.closePeriodInternal(tenantId); }
+  autoCloseDuePeriods() {
+    const due = this.rows("SELECT id,periodStart FROM tenants WHERE status='active' AND periodStart+?<=?", PERIOD, this.now()) as Row[];
+    const issued: { tenantId: string; id: string; totalUsd: string }[] = [];
+    for (const tenant of due) {
+      while (this.now() >= Number(this.row('SELECT periodStart FROM tenants WHERE id=?', tenant.tenantId ?? tenant.id)?.periodStart) + PERIOD) {
+        const invoice = this.closePeriodInternal(tenant.tenantId ?? tenant.id);
+        issued.push({ tenantId: tenant.tenantId ?? tenant.id, ...invoice });
+      }
+    }
+    return issued;
   }
   payment(session: Session, invoiceId: string, input: {amountUsd: string; rail: string; reference: string}) {
     this.operator(session); const invoice = this.row('SELECT * FROM invoices WHERE id=?', invoiceId);
@@ -169,6 +182,7 @@ export class Store {
     return { id: invoiceId, paidUsd: format(this.invoicePaid(invoiceId), 6) };
   }
   state(session: Session) {
+    this.autoCloseDuePeriods();
     const all = session.role === 'operator'; const where = all ? '' : ' WHERE tenantId=?'; const args = all ? [] : [session.tenantId];
     const charges = this.rows(`SELECT * FROM charges${where} ORDER BY createdAt DESC,id`, ...args);
     const tenants = this.rows(all ? 'SELECT * FROM tenants' : 'SELECT * FROM tenants WHERE id=?', ...args).map(t => {
