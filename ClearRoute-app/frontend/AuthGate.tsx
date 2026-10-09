@@ -71,6 +71,7 @@ export default function AuthGate() {
     {!status && !error && <p role="status">Checking session…</p>}
     {error && <p role="alert">{error}</p>}
     {status && <><label htmlFor="access-key">Access key</label><input id="access-key" type="password" autoComplete="off" value={accessKey} onChange={event => setAccessKey(event.target.value)} required disabled={busy} /><button className="button" disabled={busy || !accessKey.trim()}>{busy ? 'Signing in…' : 'Sign in'}</button><p>{status.networkMode === 'offline' ? 'Offline testing: no Canton connections or transactions.' : 'Canton Network · Access is scoped to your account.'}</p></>}
+    {status && <p className="judge-access-note"><strong>Judge access</strong><br />Request a temporary workspace key by emailing <a href="mailto:karkadeekshithreddy@gmail.com">karkadeekshithreddy@gmail.com</a>.</p>}
     {!status && error && <button type="button" className="button" onClick={() => window.location.reload()}>Retry connection</button>}
   </form></main>;
 }

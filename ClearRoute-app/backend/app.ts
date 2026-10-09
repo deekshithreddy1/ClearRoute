@@ -31,6 +31,44 @@ export function createApp(store: Store, staticPath?: string, localnet?: Localnet
   });
   app.use(express.json({ limit: '24kb' }));
   app.get('/healthz', (_req, res) => res.setHeader('Cache-Control', 'no-store').status(200).json({ service: 'clearroute', status: 'ok' }));
+  app.get('/api/public-price', async (_req, res) => {
+    try {
+      let quote: { usd: number; usd_24h_change: number | null } | undefined;
+      let source = 'ClearRoute public price proxy';
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=canton-coin,canton-network&vs_currencies=usd&include_24hr_change=true', { headers: { accept: 'application/json', ...(process.env.CLEARROUTE_COINGECKO_API_KEY ? { 'x-cg-demo-api-key': process.env.CLEARROUTE_COINGECKO_API_KEY } : {}) }, signal: AbortSignal.timeout(8000) });
+        if (response.ok) {
+          const raw = await response.json() as Record<string, { usd?: number; usd_24h_change?: number }>;
+          const item = raw['canton-coin'] || raw['canton-network'];
+          if (item?.usd && Number.isFinite(item.usd)) quote = { usd: item.usd, usd_24h_change: Number.isFinite(item.usd_24h_change) ? item.usd_24h_change! : null };
+        }
+      } catch { /* fall through to CantonScan */ }
+      if (!quote) {
+        try {
+          const response = await fetch('https://pricing.noves.fi/daml/canton/price/cc', { headers: { accept: 'application/json', apiKey: process.env.CLEARROUTE_NOVES_API_KEY || 'demokey' }, signal: AbortSignal.timeout(8000) });
+          if (response.ok) {
+            const body = await response.text();
+            let raw: { price?: number | string; usd?: number | string; data?: { price?: number | string } } = {};
+            try { raw = JSON.parse(body) as typeof raw; } catch { /* Noves also documents text/plain responses */ }
+            const value = raw.price ?? raw.usd ?? raw.data?.price ?? body.trim();
+            const usd = typeof value === 'string' ? Number(value) : value;
+            if (usd && Number.isFinite(usd)) { quote = { usd, usd_24h_change: null }; source = 'Noves Canton public price API'; }
+          }
+        } catch { /* fall through to explorer */ }
+      }
+      if (!quote) {
+        const response = await fetch('https://www.cantonscan.com/', { headers: { accept: 'text/html', 'user-agent': 'ClearRoute/1.0' }, signal: AbortSignal.timeout(8000) });
+        if (!response.ok) throw new Error('CantonScan unavailable');
+        const html = await response.text();
+        const match = html.match(/\$(\d+(?:\.\d{1,8})?)[\s\S]{0,180}?USD per CC/i);
+        if (!match) throw new Error('CantonScan returned no CC price');
+        quote = { usd: Number(match[1]), usd_24h_change: null };
+        source = 'CantonScan public explorer';
+      }
+      res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+      return res.json({ 'canton-coin': quote, source, checkedAt: new Date().toISOString() });
+    } catch { return res.status(503).json({ error: { code: 'PRICE_UNAVAILABLE', message: 'The public CC price feed is temporarily unavailable.' } }); }
+  });
   const devnetFunding = auth.networkMode === 'devnet' && auth.mode !== 'demo' ? publicFunding : undefined;
   installAuth(app, store, auth, () => publicFundingRoutes(app, devnetFunding, auth.origins ?? ['http://127.0.0.1:3001', 'http://localhost:3001', 'http://127.0.0.1:5173', 'http://localhost:5173']));
   operatorFundingRoutes(app, devnetFunding);

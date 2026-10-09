@@ -15,6 +15,9 @@
 .auth-card { width:min(100%,440px); display:grid; gap:18px; padding:32px; border:1px solid #ddd; border-radius:16px; background:white; }
 .auth-card input { width:100%; padding:12px; border:1px solid #888; border-radius:6px; }
 .auth-card [role=alert] { color:#a02222; }
+.judge-access-note { margin:0; padding:12px 14px; border:1px solid #dbe8dc; border-radius:8px; background:#f4f8f2; color:#5c6f5a; font-size:12px; line-height:1.6; }
+.judge-access-note strong { color:#2e573d; }
+.judge-access-note a { color:#23664d; font-weight:600; }
 .onboarding { display:grid; gap:20px; }
 .onboarding-form { display:grid; gap:14px; padding:18px; border:1px solid #e0e3df; border-radius:10px; background:#fbfcfa; }
 .onboarding-form h3, .onboarding-list h3 { margin:0; }
