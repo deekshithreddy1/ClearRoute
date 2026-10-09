@@ -18,7 +18,7 @@ export class PublicFunding {
   private db: DatabaseSync;
   private busy = new Set<string>();
   private checked: WalletCheck | null = null;
-  constructor(file: string, private wallet?: DevnetWallet, readonly sendsEnabled = false, private now = Date.now) {
+  constructor(file: string, private wallet?: DevnetWallet, readonly sendsEnabled = false, private now = Date.now, private onCompleted?: (requestId: string, party: string, amountCc: string, recordedAt: string, evidence: unknown) => void) {
     this.db = new DatabaseSync(file);
     this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
       CREATE TABLE IF NOT EXISTS public_funding(id TEXT PRIMARY KEY,keyHash TEXT UNIQUE NOT NULL,input TEXT NOT NULL,status TEXT NOT NULL,createdAt TEXT NOT NULL,updatedAt TEXT NOT NULL,note TEXT NOT NULL,offer TEXT,evidence TEXT,error TEXT);
@@ -38,6 +38,10 @@ export class PublicFunding {
       this.db.prepare('UPDATE public_funding SET status=?,updatedAt=?,error=?,evidence=COALESCE(?,evidence) WHERE id=?').run(status, this.time(), error, evidence ? JSON.stringify(evidence) : null, id);
       if (previous.status !== status || previous.error !== error) this.event(id, actor, status);
       this.db.exec('COMMIT');
+      if (status === 'completed' && previous.status !== 'completed' && this.onCompleted) {
+        const input = JSON.parse(this.row(id).input) as { party: string; amount: string };
+        this.onCompleted(id, input.party, input.amount, this.time(), evidence ?? null);
+      }
     } catch(e) { this.db.exec('ROLLBACK'); throw e; }
   }
   rate(ip: string, kind: string, limit: number) {

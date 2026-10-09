@@ -42,7 +42,7 @@ const walletFunding = localnet ? new WalletFunding(dataDir, walletConnector(conf
 if (process.env.CLEARROUTE_PUBLIC_FUNDING === '1' && config.networkMode !== 'devnet') throw new Error('Public funding is available only in Devnet mode.');
 const publicWallet = config.networkMode === 'devnet' && process.env.CLEARROUTE_DEVNET_TREASURY_PARTY
   ? new NodersDevnetWallet(process.env.CLEARROUTE_DEVNET_TREASURY_PARTY, () => broker ? broker.get('CLEARROUTE_DEVNET_WALLET_TOKEN') : process.env.CLEARROUTE_DEVNET_WALLET_TOKEN, fetch, () => broker?.status('CLEARROUTE_DEVNET_WALLET_TOKEN') ?? { mode: 'manual', status: 'manual_token', expiresAt: null, lastRenewedAt: null }) : undefined;
-const publicFunding = process.env.CLEARROUTE_PUBLIC_FUNDING === '1' ? new PublicFunding(path.join(dataDir, 'public-funding.sqlite'), publicWallet, process.env.CLEARROUTE_DEVNET_TRANSFERS === 'ENABLED') : undefined;
+const publicFunding = process.env.CLEARROUTE_PUBLIC_FUNDING === '1' ? new PublicFunding(path.join(dataDir, 'public-funding.sqlite'), publicWallet, process.env.CLEARROUTE_DEVNET_TRANSFERS === 'ENABLED', Date.now, (requestId, party, amount, recordedAt, evidence) => operations.recordPublicTransfer('devnet', requestId, party, amount, recordedAt, evidence)) : undefined;
 const app = createApp(store, path.resolve('dist'), localnet, traffic, metering, sponsorship, { ...config, identities }, onboarding, walletFunding, operations, publicFunding);
 const timers: ReturnType<typeof setInterval>[] = [];
 const work = new Set<Promise<void>>();

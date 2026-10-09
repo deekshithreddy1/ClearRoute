@@ -53,6 +53,22 @@ export class Operations {
   }
   async drain() { await Promise.allSettled(this.inflight); }
   close() { this.db.close(); }
+  recordPublicTransfer(network: Network, requestId: string, recipientParty: string, amountCc: string, recordedAt: string, evidence: unknown = null) {
+    if (network !== 'devnet') fail('NETWORK_NOT_ALLOWED', 'Public CC transfers are limited to Devnet.', 403);
+    const profile = this.profile(network);
+    const tenant = Object.keys(profile.customers).find(key => profile.customers[key].partyId === recipientParty) ?? null;
+    fixed(amountCc);
+    const ref = `public-funding:${requestId}`;
+    this.transaction(() => {
+      const existing = this.db.prepare('SELECT tenant,amount FROM metrics WHERE network=? AND kind=? AND ref=?').get(network, 'transferredCc', ref) as Row | undefined;
+      if (existing) {
+        if (existing.tenant !== tenant || fixed(existing.amount) !== fixed(amountCc)) fail('METRIC_CONFLICT', 'Public funding evidence conflicts with the existing transfer record.');
+        return;
+      }
+      this.db.prepare('INSERT INTO metrics VALUES (?,?,?,?,?,?,?)').run(network, 'transferredCc', ref, tenant, recordedAt, amountCc, ref);
+      this.db.prepare('INSERT INTO audit VALUES (?,?,?,?,?,?,?)').run(randomUUID(), network, recordedAt, 'public-funding', tenant, 'cc.transfer.indexed', JSON.stringify({ requestId, recipientParty, amountCc, evidence }));
+    });
+  }
   private profile(n: Network): Profile { return this.profiles[n] ?? fail('NETWORK_NOT_CONFIGURED', 'Configure this network and scoped identities on the server.', 503); }
   private event(n: Network, s: Session, kind: string, detail: unknown, tenant: string | null = null) { this.db.prepare('INSERT INTO audit VALUES (?,?,?,?,?,?,?)').run(randomUUID(), n, iso(this.now()), s.id, tenant, kind, JSON.stringify(detail)); }
   private transaction<T>(fn: () => T): T { this.db.exec('BEGIN IMMEDIATE'); try { const result = fn(); this.db.exec('COMMIT'); return result; } catch (e) { this.db.exec('ROLLBACK'); throw e; } }
