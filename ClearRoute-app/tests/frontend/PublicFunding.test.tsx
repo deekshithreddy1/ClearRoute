@@ -51,3 +51,25 @@ test('operator cannot send a pending or uncertain request and must use reconcili
   await userEvent.click(screen.getByRole('button', { name: 'Reconcile original transfer' }));
   await waitFor(() => expect(fetcher).toHaveBeenCalledWith('/api/devnet-funding/request-1/reconcile', expect.objectContaining({ method: 'POST', body: '{}' })));
 });
+
+test('operator sees renewable authentication failure without treating it as transfer completion', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({
+    transfersEnabled: true, maxRequestCc: '10', budgetCc: '100', reservedCc: '1', deliveredCc: '0', wallet: null,
+    credentialStatus: { mode: 'refresh_token', status: 'reauthorization_required', expiresAt: null, lastRenewedAt: null },
+    requests: [{ ...record, status: 'uncertain' }],
+  })));
+  render(<DemoTransfers />);
+  await screen.findByText(/identity provider requires reauthorization/);
+  expect(screen.getByRole('button', { name: 'Reconcile original transfer' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: /Send .* CC offer/ })).toBeNull();
+  expect(screen.queryByText('CC delivered')).toBeNull();
+});
+
+test('manual wallet tokens clearly disclose missing automatic renewal', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({
+    transfersEnabled: false, maxRequestCc: '10', budgetCc: '100', reservedCc: '0', deliveredCc: '0', wallet: null,
+    credentialStatus: { mode: 'manual', status: 'manual_token', expiresAt: null, lastRenewedAt: null }, requests: [],
+  })));
+  render(<DemoTransfers />);
+  await screen.findByText(/Automatic authentication renewal is not configured/);
+});

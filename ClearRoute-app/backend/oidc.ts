@@ -76,10 +76,22 @@ export class CredentialBroker {
     const m = this.memory.get(p.id)!;
     if (m.blocked) throw unavailable();
     if (m.token && m.expiresAt! > this.now() + 60000) return m.token;
-    if (m.retryAt && m.retryAt > this.now()) throw unavailable();
+    if (m.retryAt && m.retryAt > this.now()) {
+      if (this.usableDuringOutage(m)) return m.token;
+      throw unavailable();
+    }
     let flight = this.flights.get(p.id);
     if (!flight) { flight = this.renew(p).finally(() => this.flights.delete(p.id)); this.flights.set(p.id, flight); }
-    return flight;
+    try { return await flight; }
+    catch (error) {
+      // A temporary token-endpoint failure must not invalidate a still-valid
+      // token. Never fall back after revocation, identity or storage failures.
+      if (this.usableDuringOutage(m)) return m.token;
+      throw error;
+    }
+  }
+  private usableDuringOutage(m: Memory): m is Memory & { token: string } {
+    return !m.blocked && m.status === 'renewal_unavailable' && !!m.token && (m.expiresAt ?? 0) > this.now() + 5000;
   }
   private async renew(p: Provider) {
     const m = this.memory.get(p.id)!;

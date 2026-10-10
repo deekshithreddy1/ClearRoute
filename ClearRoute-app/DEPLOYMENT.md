@@ -90,6 +90,9 @@ this version on ephemeral serverless storage or scale it across replicas.
 
 ### Optional renewable authentication
 
+For activation and nonfinancial acceptance checks, follow
+[Continuous hosted authentication](deploy/CONTINUOUS-AUTH.md).
+
 The base Compose setup uses manually supplied tokens. Leave
 `CLEARROUTE_OIDC_CONFIG_FILE` empty for that initial test. Copy
 `config/oidc.example.json` to private `config/oidc.json`, confirm its subject and

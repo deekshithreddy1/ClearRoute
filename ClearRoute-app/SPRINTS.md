@@ -250,3 +250,29 @@ Created a narrated 1080p video using actual public funding screenshots and expla
 ## AWS clone readiness - 8 October 2026
 Default cloud configuration now leaves optional OIDC disabled until configured. Added an explicit renewal mount overlay, corrected the deployment branch and direct account-provisioning commands, and excluded pitch/video outputs from Docker context. Offline runtime test now excludes inherited ClearRoute deployment settings. Acceptance: npm run verify passed with public-funding and a missing OIDC path in the parent environment (91 backend, 43 frontend, typecheck and build); base and OIDC Compose configurations validated with example-only files. AWS container build, renewal and live transfers remain separate checks.
 
+## Connection recovery - 10 October 2026
+
+Work branch: sprint/06-connection-recovery, based on the current application tip
+3ab3285 (a descendant of dev) to preserve the hosted pilot and newer UI work.
+Existing unrelated work is retained; no commit, push or merge is part of this fix.
+
+Keep a still-valid access token during transient proactive-renewal failures, with
+a five-second expiry margin and no fallback for revoked/invalid/storage-blocked
+credentials. Active operator workspaces refresh node readiness automatically;
+the backend five-minute gate and write/permission controls remain. The funding
+page exposes renewal state and expiry metadata without exposing credentials.
+
+Acceptance: test concurrency, refresh rotation across restart, outage/backoff,
+expiry, revocation and identity mismatch; test automatic operator-only readiness
+checks and visible failures; verify pending transfers remain pending. Run the full
+offline npm run verify gate. AWS activation needs the actual host and supported
+provider grant; follow deploy/CONTINUOUS-AUTH.md. No live financial tests.
+
+Verification: final `npm run verify` exited 0 on 2026-10-10: all TypeScript
+checks, 97 backend tests, 49 frontend tests and both production builds passed.
+This includes slow-check overlap protection and existing financial replay tests.
+The first sandboxed run could not spawn the offline runtime child (EPERM);
+the approved unsandboxed run passed. No AWS login, renewal soak, deployment or
+financial transaction was performed. Browser session discovery failed to
+initialize; SSH/console connection details are still needed for activation.
+

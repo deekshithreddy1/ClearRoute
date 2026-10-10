@@ -6,6 +6,52 @@ import { operationsState } from './operations-fixture';
 
 const admin = { id: 'admin', name: 'Admin', role: 'operator' as const, tenantId: null };
 const customer = { id: 'atlas-user', name: 'Atlas Labs', role: 'customer' as const, tenantId: 'atlas' };
+
+test('active operator automatically rechecks ledger readiness without submitting commands', async () => {
+  vi.useFakeTimers();
+  try {
+    const health = { status: 'connected', checkedAt: new Date().toISOString(), detail: 'Fixture readiness confirmed' };
+    vi.mocked(fetch).mockImplementation(async url => Response.json(String(url).endsWith('/check') ? health : operationsState));
+    render(<OperationsApp identity={admin} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    const checks = () => vi.mocked(fetch).mock.calls.filter(([url]) => String(url) === '/api/operations/devnet/check');
+    expect(checks()).toHaveLength(1);
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+    expect(checks()).toHaveLength(2);
+    expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).endsWith('/commands'))).toBe(false);
+  } finally { vi.useRealTimers(); }
+});
+
+test('customers do not automatically execute operator readiness checks', async () => {
+  vi.mocked(fetch).mockImplementation(async () => Response.json({ ...operationsState, analytics: null }));
+  render(<OperationsApp identity={customer} />);
+  await screen.findByRole('button', { name: 'View my service' });
+  expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).endsWith('/check'))).toBe(false);
+});
+
+test('a slow readiness check is not overlapped or discarded by the refresh timer', async () => {
+  vi.useFakeTimers();
+  try {
+    let finish!: (response: Response) => void;
+    vi.mocked(fetch).mockImplementation(async url => String(url) === '/api/operations/devnet/check'
+      ? new Promise<Response>(resolve => { finish = resolve; }) : Response.json(operationsState));
+    render(<OperationsApp identity={admin} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(60000); });
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => url === '/api/operations/devnet/check')).toHaveLength(1);
+    await act(async () => { finish(Response.json({ status: 'connected', checkedAt: new Date().toISOString(), detail: 'Ready' })); });
+    expect(screen.getByText('Invoiced this month')).toBeTruthy();
+  } finally { vi.useRealTimers(); }
+});
+
+test('readiness failures are visible and do not hide existing operation records', async () => {
+  vi.mocked(fetch).mockImplementation(async url => String(url).endsWith('/check')
+    ? Response.json({ error: { message: 'Ledger returned HTTP 401.' } }, { status: 502 })
+    : Response.json(operationsState));
+  render(<OperationsApp identity={admin} />);
+  await screen.findByText(/Ledger readiness check failed: Ledger returned HTTP 401/);
+  expect(screen.getByText('Invoiced this month')).toBeTruthy();
+});
 test('admin sees separate financial metrics and three hosted networks without a LocalNet tab', async () => {
   vi.mocked(fetch).mockResolvedValue(Response.json(operationsState));
   render(<OperationsApp identity={admin} />);

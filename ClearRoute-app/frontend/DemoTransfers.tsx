@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { z } from 'zod';
 import { fundingApi, fundingRecord, FundingReceipt } from './PublicFunding';
+import { CredentialStatus, credentialStatusSchema } from './CredentialStatus';
 
-const stateSchema = z.object({ transfersEnabled: z.boolean(), maxRequestCc: z.string(), budgetCc: z.string(), reservedCc: z.string(), deliveredCc: z.string(), wallet: z.object({ party: z.string(), balanceCc: z.string(), checkedAt: z.string() }).nullable(), requests: z.array(fundingRecord) });
+const stateSchema = z.object({ transfersEnabled: z.boolean(), maxRequestCc: z.string(), budgetCc: z.string(), reservedCc: z.string(), deliveredCc: z.string(), credentialStatus: credentialStatusSchema.optional(), wallet: z.object({ party: z.string(), balanceCc: z.string(), checkedAt: z.string() }).nullable(), requests: z.array(fundingRecord) });
 export default function DemoTransfers() {
   const [data, setData] = useState<z.infer<typeof stateSchema> | null>(null), [error, setError] = useState(''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false);
   const locked = useRef(false);
@@ -18,6 +19,7 @@ export default function DemoTransfers() {
   return <div className="funding-admin"><section className="ops-card"><span className="ops-kicker">PUBLIC DEVNET PILOT</span><h2>Requests to real wallet delivery</h2><p>Share the request page with a tester. Confirm their wallet supports Splice transfer offers before approving. They accept the offer in their own wallet.</p><label className="ops-field">Share this public link<input readOnly value={location.origin + '/funding'} onFocus={e => e.currentTarget.select()} /></label><a href="/funding" target="_blank" rel="noreferrer">Open tester page</a><div className="funding-admin-actions"><button className="ops-button" disabled={busy} onClick={() => void act('check', {})}>Check treasury wallet</button><button className="ops-button secondary" disabled={busy} onClick={() => { setError(''); void load(); }}>Refresh requests</button></div>
       {data && <><p><strong>{data.transfersEnabled ? 'Devnet sends enabled' : 'Sends disabled'}</strong> · Maximum {data.maxRequestCc} CC per request · {data.budgetCc} CC total delivery budget, excluding fees.</p><p>{data.deliveredCc} CC delivered · {data.reservedCc} CC committed including deliveries.</p>{data.wallet ? <details><summary>Observed balance: {data.wallet.balanceCc} CC</summary><code>{data.wallet.party}</code><p>Checked {new Date(data.wallet.checkedAt).toLocaleString()}. Fees and other spending can change the balance.</p></details> : <p>Check the treasury wallet before sending.</p>}</>}
       <p className="ops-footnote">Pilot transfers are separate from service agreements and USD invoicing. Delivery is confirmed by the NODERS wallet status API, with its transaction reference. This is not an independent ledger audit.</p></section>
+    <CredentialStatus value={data?.credentialStatus} />
     {error && <p role="alert" className="ops-alert error">{error}</p>}{notice && <p role="status" className="ops-alert">{notice}</p>}
     {data?.requests.length === 0 && <section className="ops-card"><h3>Ready for your first tester</h3><p>Send the public link above. Their request will appear here automatically.</p></section>}
     {data?.requests.map(r => <article className="ops-card" key={r.id}><FundingReceipt record={r} /><p><strong>Contact:</strong> {r.email} (unverified) · <strong>Wallet:</strong> {r.wallet}</p><p><strong>Test purpose:</strong> {r.purpose}</p>{r.error && <p role="alert" className="ops-alert attention">{r.error}</p>}

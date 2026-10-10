@@ -79,11 +79,20 @@ export default function OperationsApp({ identity, initialNetwork = 'devnet' }: {
   const [wallet, setWallet] = useState<{ party: string; balanceCc: string; checkedAt: string } | null>(null), [devnetFunding, setDevnetFunding] = useState<FundingState | null>(null);
   const [pending, setPending] = useState<{ network: Network; body: unknown; key: string } | null>(saved);
   useEffect(() => { const p = saved(); if (p) setNetwork(p.network); }, []);
-  const generation = useRef(0), lock = useRef(false); const operator = identity.role === 'operator';
+  const generation = useRef(0), refreshing = useRef<number | null>(null), lock = useRef(false); const operator = identity.role === 'operator';
   const load = useCallback(async () => {
-    const current = ++generation.current; setLoading(true);
+    if (refreshing.current !== null) return;
+    const current = ++generation.current; refreshing.current = current; setLoading(true);
     try {
       const next = operationsSchema.parse(await operationRequest(network));
+      if (current !== generation.current) return;
+      // Keep the five-minute readiness gate fresh while an operator is active.
+      // This endpoint checks identity/package/readiness; it submits no command.
+      if (operator && next.configured) {
+        try { next.health = operationsSchema.shape.health.parse(await operationRequest(network + '/check', {})); }
+        catch (e) { next.health = { status: 'unavailable', checkedAt: new Date().toISOString(), detail: e instanceof Error ? e.message : 'Connection check failed.' }; }
+      }
+      if (current !== generation.current) return;
       if (current === generation.current) { setData(next); setError(''); }
       if (operator && network === 'devnet') {
         try {
@@ -94,9 +103,9 @@ export default function OperationsApp({ identity, initialNetwork = 'devnet' }: {
       } else if (current === generation.current) { setWallet(null); setDevnetFunding(null); }
     }
     catch (e) { if (current === generation.current) setError(e instanceof Error ? e.message : 'Unable to load operations.'); }
-    finally { if (current === generation.current) setLoading(false); }
+    finally { if (refreshing.current === current) refreshing.current = null; if (current === generation.current) setLoading(false); }
   }, [network, operator]);
-  useEffect(() => { setData(null); setError(''); setNotice(''); void load(); const timer = setInterval(() => { if (!lock.current) void load(); }, 30000); return () => { ++generation.current; clearInterval(timer); }; }, [load]);
+  useEffect(() => { setData(null); setError(''); setNotice(''); void load(); const timer = setInterval(() => { if (!lock.current) void load(); }, 30000); return () => { ++generation.current; refreshing.current = null; clearInterval(timer); }; }, [load]);
   async function mutate(route: string, body: unknown, message: string, key?: string): Promise<boolean> {
     if (lock.current) return false; lock.current = true; setBusy(true); setError(''); setNotice('');
     try { const result = await operationRequest(`${network}/${route}`, body, key); if (result.status === 'uncertain') setNotice('Outcome is uncertain. Reconcile this command before any new submission.'); else setNotice(message); await load(); return true; }
@@ -122,6 +131,7 @@ export default function OperationsApp({ identity, initialNetwork = 'devnet' }: {
         {network !== 'mainnet' && <div className="ops-environment-note"><span>{labels[network].toUpperCase()}</span>Test-network activity. Keep these records separate from commercial Mainnet reporting.</div>}
         {error && <div className="ops-alert error" role="alert">{error}<button onClick={() => void load()}>Refresh</button></div>}
         {notice && <div className="ops-alert" role="status"><Check size={16} />{notice}</div>}
+        {operator && data?.health.status === 'unavailable' && <div className="ops-alert attention" role="status">Ledger readiness check failed: {data.health.detail} The app will check again automatically.</div>}
         {pending && <div className="ops-alert attention">Your command request is retained. Retry sends the same body and identifier.<button disabled={busy} onClick={() => void command(pending.body)}>Retry same request</button></div>}
         {!data ? <div className="ops-loading"><LoaderCircle size={26} className={loading ? 'spin' : ''} /><h2>{loading ? 'Loading your workspace' : 'Operations unavailable'}</h2><p>{loading ? 'Reading this environment’s recorded activity.' : 'Refresh when the operations service is available.'}</p></div> : <>
           {!data.configured && <div className="ops-alert attention"><CircleHelp size={18} /><div><strong>{labels[network]} is awaiting configuration</strong><p>Add the reviewed participant, package, synchronizer, and scoped identities on the server. No ledger transactions are enabled.</p></div></div>}
